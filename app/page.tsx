@@ -9,7 +9,6 @@ export default function DeSaaSPage() {
   const [building, setBuilding] = useState(false);
   const [questions, setQuestions] = useState<string[]>([]);
   const [code, setCode] = useState('');
-  const [answers, setAnswers] = useState<string[]>([]);
   const [image, setImage] = useState<File | null>(null);
 
   // Handle theme toggle
@@ -19,7 +18,7 @@ export default function DeSaaSPage() {
 
   // Handle input changes for prompt
   const handleInputChangeWithPrompt = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleInputChange(e); // use the handleInputChange provided by `useChat` hook
+    handleInputChange(e);  // use the handleInputChange provided by `useChat` hook
   };
 
   // Handle file upload
@@ -30,16 +29,17 @@ export default function DeSaaSPage() {
   };
 
   // Function to start building code (trigger chat with `useChat` hook)
-  const startBuilding = async () => {
+  const startBuilding = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // Prevent the form from submitting in the traditional way
+
     setBuilding(true);
 
     try {
-      // Send the prompt (the user input) via `handleSubmit` from `useChat` hook
+      // Send the user input as a message (this is handled by handleSubmit)
       await handleSubmit(); // handleSubmit automatically sends the input when the form is submitted
 
       // Wait for the response (messages will automatically update)
-      if (messages) {
-        // Set the dynamic questions based on the response (assuming response has questions)
+      if (messages && messages.length > 0) {
         setQuestions(messages[1]?.content?.questions || []);
         setCode(messages[1]?.content?.code || 'No code generated');
       }
@@ -65,7 +65,7 @@ export default function DeSaaSPage() {
   const generateCode = async () => {
     try {
       // Send answers to backend (use `handleSubmit` to send the answers to the backend)
-      await handleSubmit(); // handleSubmit automatically sends the answers as part of the flow
+      await handleSubmit(); // handleSubmit will send the answers as part of the flow
 
       if (messages) {
         setCode(messages[1]?.content?.code || 'No code generated');
@@ -134,12 +134,14 @@ export default function DeSaaSPage() {
           </div>
 
           <div className="mt-4">
-            <button
-              onClick={startBuilding}
-              className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-            >
-              {building ? 'Building...' : 'Start Building'}
-            </button>
+            <form onSubmit={startBuilding}>
+              <button
+                type="submit"
+                className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+              >
+                {building ? 'Building...' : 'Start Building'}
+              </button>
+            </form>
           </div>
 
           {/* Display Dynamic Questions for Building */}
