@@ -1,87 +1,54 @@
 'use client'
 
 import { useState } from 'react';
-import { useChat } from 'ai/react';  // Import the `useChat` hook
+import { useChat } from 'ai/react'; // Import the useChat hook for managing chat messages
+import { saveAs } from 'file-saver'; // For downloading zip files
+import JSZip from 'jszip'; // Library to create zip files
 
-export default function DeSaaSPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat(); // Destructure messages and functions from useChat
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [building, setBuilding] = useState(false);
-  const [questions, setQuestions] = useState<string[]>([]);
-  const [code, setCode] = useState('');
+export default function CodeGenerationPage() {
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
+  const [theme, setTheme] = useState('dark');
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [questionsAnswered, setQuestionsAnswered] = useState<boolean>(false);
+  const [questions, setQuestions] = useState<string[]>(['What is the purpose of this code?', 'What language should be used?', 'Do you need any specific libraries?']);
   const [answers, setAnswers] = useState<string[]>([]);
-  const [image, setImage] = useState<File | null>(null);
 
-  // Handle theme toggle
+  // Handle the screenshot upload
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files ? e.target.files[0] : null;
+    if (file) setScreenshot(file);
+  };
+
+  // Toggle theme between light and dark
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
   };
 
-  // Handle input changes for prompt
-  const handleInputChangeWithPrompt = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleInputChange(e);  // use the handleInputChange provided by `useChat` hook
-  };
-
-  // Handle file upload
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setImage(e.target.files[0]);
-    }
-  };
-
-  // Function to start building code (trigger chat with `useChat` hook)
-  const startBuilding = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Prevent the form from submitting in the traditional way
-
-    setBuilding(true);
-
-    try {
-      // Send the user input as a message (this is handled by handleSubmit)
-      await handleSubmit(); // handleSubmit automatically sends the input when the form is submitted
-
-      // Wait for the response (messages will automatically update)
-      if (messages && messages.length > 0) {
-        setQuestions(messages[1]?.content?.questions || []);  // Set dynamic questions
-        setCode(messages[1]?.content?.code || 'No code generated');
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error('Request failed:', error.message);  // Log error for debugging
-      } else {
-        console.error('Request failed with unknown error:', error);
-      }
-    } finally {
-      setBuilding(false);
-    }
-  };
-
-  // Handle answer change for questions
+  // Ask questions after the prompt
   const handleAnswerChange = (index: number, answer: string) => {
     const updatedAnswers = [...answers];
     updatedAnswers[index] = answer;
     setAnswers(updatedAnswers);
   };
 
-  // Generate code based on answers (trigger another chat session)
+  // Simulate code generation based on answers
   const generateCode = async () => {
-    setBuilding(true);
+    if (!screenshot || answers.length === 0) return;
 
-    try {
-      // Instead of using `handleSubmit` to send answers, we directly use the `messages` array
-      setCode("Generating code...");
+    const zip = new JSZip();
+    const code = `Generated code based on answers: \n${answers.join('\n')}`;
 
-      // Here, we use the messages array or backend API as required to generate code from answers
-      setCode("Generated code: Sample code based on the answers.");  // Placeholder
+    // Add code to the zip file
+    zip.file("generated_code.txt", code);
 
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error('Error:', error.message);
-      } else {
-        console.error('Error:', error);
-      }
-    } finally {
-      setBuilding(false);
+    // If screenshot is uploaded, add it to the zip file
+    if (screenshot) {
+      zip.file("screenshot.png", screenshot);
     }
+
+    // Generate the zip and prompt for download
+    const zipBlob = await zip.generateAsync({ type: "blob" });
+    saveAs(zipBlob, "generated_code.zip");
   };
 
   return (
@@ -90,7 +57,7 @@ export default function DeSaaSPage() {
       <div className="flex items-center px-4 py-3 bg-opacity-80 backdrop-blur-lg border-b border-gray-700">
         <div className="w-full flex items-center justify-between">
           <h2 className="text-xl md:text-2xl lg:text-3xl font-bold truncate flex items-center">
-            LOGIQ CURVE LLC
+            Code Generator - LOGIQ CURVE LLC
           </h2>
           {/* Theme Toggle Switch */}
           <label htmlFor="theme-toggle" className="flex items-center cursor-pointer">
@@ -111,93 +78,49 @@ export default function DeSaaSPage() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
-        <div className="space-y-6">
-          {/* UI description and screenshot upload */}
-          <div>
-            <label htmlFor="prompt" className="block text-lg font-medium">Write a Prompt</label>
-            <input
-              id="prompt"
-              type="text"
-              placeholder="Describe the UI screen you want to create..."
-              className="mt-2 p-2 w-full rounded-md border border-gray-300"
-              value={input}
-              onChange={handleInputChangeWithPrompt}
-            />
-          </div>
+      {/* Instructions / Input */}
+      <div className="p-6">
+        <h3 className="text-lg font-medium">Please upload a screenshot and provide the details for code generation:</h3>
+        
+        {/* Screenshot Upload */}
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="mt-4 p-2 bg-gray-100 border rounded-md"
+        />
 
-          <div className="mt-4">
-            <label htmlFor="image-upload" className="block text-lg font-medium">Upload UI Screenshot</label>
-            <input
-              type="file"
-              id="image-upload"
-              accept="image/*"
-              className="mt-2"
-              onChange={handleFileChange}
-            />
-          </div>
-
-          <div className="mt-4">
-            <form onSubmit={startBuilding}>
-              <button
-                type="submit"
-                className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-              >
-                {building ? 'Building...' : 'Start Building'}
-              </button>
-            </form>
-          </div>
-
-          {/* Display Dynamic Questions for Building */}
-          <div className="space-y-4 mt-4">
-            {questions.map((question, index) => (
-              <div key={index} className="bg-gray-100 p-4 rounded-md shadow">
-                <label className="block text-lg font-medium">{question}</label>
-                <input
-                  type="text"
-                  className="mt-2 p-2 w-full rounded-md border border-gray-300"
-                  placeholder="Your answer..."
-                  onChange={(e) => handleAnswerChange(index, e.target.value)}
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Button to generate code */}
-          <div className="mt-4">
-            <button
-              onClick={generateCode}
-              className="w-full py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
-            >
-              Generate Code
-            </button>
-          </div>
-
-          {/* Display Generated Code */}
-          {code && (
-            <div className="mt-4">
-              <textarea
-                readOnly
-                className="w-full p-4 bg-gray-800 text-white rounded-md border border-gray-600"
-                value={code}
-                rows={10}
+        {/* Questions Section */}
+        <div className="mt-6">
+          {questions.map((question, index) => (
+            <div key={index} className="mb-4">
+              <label className="block text-sm font-semibold">{question}</label>
+              <input
+                type="text"
+                value={answers[index] || ""}
+                onChange={(e) => handleAnswerChange(index, e.target.value)}
+                className="mt-2 p-2 bg-gray-100 border rounded-md w-full"
+                placeholder="Your answer..."
               />
-              <button
-                onClick={() => {
-                  const blob = new Blob([code], { type: 'text/plain' });
-                  const link = document.createElement('a');
-                  link.href = URL.createObjectURL(blob);
-                  link.download = 'generated_code.txt';
-                  link.click();
-                }}
-                className="mt-4 w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-              >
-                Download Code
-              </button>
             </div>
-          )}
+          ))}
+          <button
+            onClick={() => setQuestionsAnswered(true)}
+            className="mt-4 p-2 bg-blue-500 text-white rounded-md"
+          >
+            Answer Questions
+          </button>
         </div>
+
+        {/* Code Generation */}
+        {questionsAnswered && (
+          <button
+            onClick={generateCode}
+            className="mt-6 p-2 bg-green-500 text-white rounded-md"
+          >
+            Generate Code and Download
+          </button>
+        )}
       </div>
     </div>
   );
