@@ -31,28 +31,34 @@ export default function CodeGenerationPage() {
     setIsProcessing(true);
     
     try {
-      // Call your backend API here to process the prompt and screenshot
-      // Example: Send prompt and screenshot (as FormData)
+      // Create FormData to send to the backend
       const formData = new FormData();
-      formData.append('prompt', prompt);
-      if (screenshot) formData.append('screenshot', screenshot);
+      formData.append('prompt', prompt); // Adding the prompt to FormData
+      if (screenshot) formData.append('screenshot', screenshot); // Add the screenshot if available
 
+      // Sending POST request to Hugging Face API
       const response = await fetch('https://mirxakamran893-LOGIQCURVECHATIQBOT.hf.space/chat', {
         method: 'POST',
-        body: formData
+        body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch questions from backend');
+        // If there's an error, throw it and log it for debugging
+        throw new Error(`Backend error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json();  // Assuming the API responds with JSON
+
+      if (data?.questions) {
+        // Set the questions returned from the backend
+        setQuestions(data.questions);
+      } else {
+        console.error('Unexpected response format:', data);
+      }
       
-      // Process the response from backend to ask questions
-      setQuestions(data.questions); // Example response containing questions
       setIsProcessing(false);
     } catch (error) {
-      console.error('Error connecting to backend:', error);
+      console.error('Error during API request:', error);
       setIsProcessing(false);
     }
   };
@@ -71,7 +77,7 @@ export default function CodeGenerationPage() {
     const zip = new JSZip();
     const code = `Generated code based on answers: \n${answers.join('\n')}`;
 
-    // Add code to the zip file
+    // Add the generated code to the zip file
     zip.file("generated_code.txt", code);
 
     // If screenshot is uploaded, add it to the zip file
