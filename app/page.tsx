@@ -37,17 +37,20 @@ export default function DeSaaSPage() {
     if (image) formData.append('image', image);
     formData.append('messages', JSON.stringify([{ role: 'user', content: input }])); // Add user input (prompt)
 
-    // Send request to /api/chat, which will call `app/api/chat/route.ts` internally by Next.js
-    const response = await fetch('/api/chat', {  // Correct API endpoint (without .ts)
-      method: 'POST',
-      body: formData,  // Send FormData to backend
-    });
+    try {
+      const response = await fetch('/api/chat', {  // Correct API endpoint (without .ts)
+        method: 'POST',
+        body: formData,  // Send FormData to backend
+      });
 
-    if (response.ok) {
-      const data = await response.json();
-      setQuestions(data.questions || []);  // Get dynamic questions returned from Hugging Face
-    } else {
-      console.error('Failed to fetch questions');
+      if (response.ok) {
+        const data = await response.json();
+        setQuestions(data.questions || []);  // Get dynamic questions returned from Hugging Face
+      } else {
+        console.error('Failed to fetch questions', await response.text());
+      }
+    } catch (error) {
+      console.error('Request failed:', error.message);
     }
   };
 
