@@ -1,14 +1,15 @@
 'use client'
 
-import { useState } from 'react';
+import { useChat } from 'ai/react'
+import { useEffect, useState } from 'react'
 
 export default function DeSaaSPage() {
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat()
   const [theme, setTheme] = useState('dark');
-  const [input, setInput] = useState('');
-  const [image, setImage] = useState<File | null>(null);
   const [building, setBuilding] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [code, setCode] = useState('');
+  const [image, setImage] = useState<File | null>(null);
 
   // Handle theme toggle
   const toggleTheme = () => {
@@ -16,8 +17,8 @@ export default function DeSaaSPage() {
   };
 
   // Handle input changes for description and prompt
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
+  const handleInputChangeWithPrompt = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleInputChange(e);  // Keep the handleInputChange logic from useChat
   };
 
   // Handle file upload
@@ -41,6 +42,23 @@ export default function DeSaaSPage() {
 
     setCode('Generated code for the project...');
   };
+
+  useEffect(() => {
+    if (!messages.length) return;
+
+    const latestAIMessage = messages.filter((m) => m.role === 'assistant').slice(-1)[0];
+    let content = latestAIMessage?.content || '';
+
+    // Typing animation and message display
+    let i = 0;
+    const interval = setInterval(() => {
+      setCode((prevCode) => prevCode + content[i]);
+      i++;
+      if (i > content.length) clearInterval(interval);
+    }, 20);
+
+    return () => clearInterval(interval);
+  }, [messages]);
 
   return (
     <div className={`flex flex-col h-screen w-full max-w-screen overflow-hidden ${theme === 'dark' ? 'bg-gradient-to-b from-gray-800 to-gray-900 text-white' : 'bg-gradient-to-b from-gray-200 to-gray-300 text-black'}`}>
@@ -83,7 +101,7 @@ export default function DeSaaSPage() {
                   placeholder="Describe the UI screen you want to create..."
                   className="mt-2 p-2 w-full rounded-md border border-gray-300"
                   value={input}
-                  onChange={handleInputChange}
+                  onChange={handleInputChangeWithPrompt}
                 />
               </div>
 
