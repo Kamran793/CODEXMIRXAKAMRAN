@@ -28,12 +28,13 @@ export default function CodeGenerationPage() {
     setPrompt(e.target.value);
   };
 
-  // Handle sending the prompt through the useChat hook
-  const handleStartBuilding = async () => {
+  // Handle sending the prompt through the useChat hook inside a form submission
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // Prevent the form from submitting the default way
     setIsProcessing(true);
     
-    // Pass the prompt to handleSubmit to send it through the useChat hook
-    await handleSubmit(prompt); // This sends the prompt and processes the response
+    // Call handleSubmit to process the prompt and get the assistant's response
+    await handleSubmit(); // This triggers the useChat logic
 
     const latestAssistantMessage = messages.find(m => m.role === 'assistant');
     if (latestAssistantMessage) {
@@ -128,12 +129,14 @@ export default function CodeGenerationPage() {
         />
 
         {/* Start Building Button */}
-        <button
-          onClick={handleStartBuilding}
-          className="mt-4 p-2 bg-blue-500 text-white rounded-md"
-        >
-          {isProcessing ? 'Processing...' : 'Start Building'}
-        </button>
+        <form onSubmit={handleFormSubmit}>
+          <button
+            type="submit"
+            className="mt-4 p-2 bg-blue-500 text-white rounded-md"
+          >
+            {isProcessing ? 'Processing...' : 'Start Building'}
+          </button>
+        </form>
 
         {/* Questions Section */}
         {questions.length > 0 && !isProcessing && (
