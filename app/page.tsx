@@ -38,7 +38,7 @@ export default function DeSaaSPage() {
     formData.append('messages', JSON.stringify([{ role: 'user', content: input }])); // Add user input (prompt)
 
     try {
-      const response = await fetch('/api/chat', {  // Correct API endpoint (without .ts)
+      const response = await fetch('/api/chat', {  // Correct API endpoint
         method: 'POST',
         body: formData,  // Send FormData to backend
       });
@@ -49,8 +49,13 @@ export default function DeSaaSPage() {
       } else {
         console.error('Failed to fetch questions', await response.text());
       }
-    } catch (error) {
-      console.error('Request failed:', error.message);
+    } catch (error: unknown) {
+      // Type the error as an instance of Error to access .message
+      if (error instanceof Error) {
+        console.error('Request failed:', error.message);  // Log error for debugging
+      } else {
+        console.error('Request failed with unknown error:', error);
+      }
     }
   };
 
@@ -76,8 +81,13 @@ export default function DeSaaSPage() {
       } else {
         console.error('Failed to generate code');
       }
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (error: unknown) {
+      // Type the error as an instance of Error to access .message
+      if (error instanceof Error) {
+        console.error('Error:', error.message);
+      } else {
+        console.error('Error:', error);
+      }
     }
   };
 
