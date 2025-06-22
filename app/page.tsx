@@ -1,14 +1,13 @@
 'use client'
 
-import { useChat } from 'ai/react'
 import { useState } from 'react'
 
 export default function DeSaaSPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat()
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [building, setBuilding] = useState(false);
   const [questions, setQuestions] = useState<string[]>([]);
   const [code, setCode] = useState('');
+  const [input, setInput] = useState('');
   const [answers, setAnswers] = useState<string[]>([]);
   const [image, setImage] = useState<File | null>(null);
 
@@ -19,7 +18,7 @@ export default function DeSaaSPage() {
 
   // Handle input changes for description and prompt
   const handleInputChangeWithPrompt = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleInputChange(e);  // Keep the handleInputChange logic from useChat
+    setInput(e.target.value);
   };
 
   // Handle file upload
@@ -33,17 +32,19 @@ export default function DeSaaSPage() {
   const startBuilding = async () => {
     setBuilding(true);
 
+    // Send prompt and image to backend to get questions
     try {
-      // Send prompt to backend (your Hugging Face API logic)
+      const formData = new FormData();
+      if (image) formData.append('image', image);
+      formData.append('messages', JSON.stringify([{ role: 'user', content: input }]));
+
       const response = await fetch('/api/chat/route.ts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: input, image: image }),
+        body: formData,
       });
 
       if (response.ok) {
         const data = await response.json();
-        // Set dynamic questions based on the API response
         setQuestions(data.questions || []);
       } else {
         console.error('Failed to fetch questions');
@@ -62,7 +63,6 @@ export default function DeSaaSPage() {
   // Handle code generation based on answers
   const generateCode = async () => {
     try {
-      // Send answers to the backend to generate code
       const response = await fetch('/api/chat/route.ts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
