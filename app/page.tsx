@@ -28,7 +28,7 @@ export default function DeSaaSPage() {
     }
   };
 
-  // Function to start building code (makes API call to /api/chat/route.ts)
+  // Function to start building code (makes API call to /api/chat)
   const startBuilding = async () => {
     setBuilding(true);
 
@@ -37,8 +37,8 @@ export default function DeSaaSPage() {
     if (image) formData.append('image', image);
     formData.append('messages', JSON.stringify([{ role: 'user', content: input }]));
 
-    // Send request to your backend to interact with Hugging Face API
-    const response = await fetch('/api/chat/route.ts', {
+    // Send request to your backend API at /api/chat
+    const response = await fetch('/api/chat', {
       method: 'POST',
       body: formData,  // Send FormData to backend
     });
@@ -60,7 +60,7 @@ export default function DeSaaSPage() {
   // Handle code generation based on answers
   const generateCode = async () => {
     try {
-      const response = await fetch('/api/chat/route.ts', {
+      const response = await fetch('/api/chat', {  // Use correct endpoint here
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers }),
