@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useChat } from 'ai/react';  // Hook to communicate with the backend API
 
 export default function DeSaaSPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();  // Destructure messages and functions from useChat
+  const { messages, input, handleInputChange, sendMessage, isLoading } = useChat();  // Destructure messages and functions from useChat
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [building, setBuilding] = useState(false);
   const [questions, setQuestions] = useState<string[]>([]);
@@ -18,7 +18,7 @@ export default function DeSaaSPage() {
 
   // Handle input changes for prompt
   const handleInputChangeWithPrompt = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleInputChange(e); // use the handleInputChange provided by `useChat` hook
+    handleInputChange(e);  // use the handleInputChange provided by `useChat` hook
   };
 
   // Handle file upload
@@ -31,15 +31,15 @@ export default function DeSaaSPage() {
   // Function to start building code (trigger chat with `useChat` hook)
   const startBuilding = async () => {
     setBuilding(true);
-    
+
     try {
-      // Send the prompt (the user input) via `handleSubmit` from `useChat` hook
-      await handleSubmit({ role: 'user', content: input }); // Pass the user input as the content
+      // Use sendMessage to submit the prompt to backend (route.ts)
+      await sendMessage({ role: 'user', content: input });
 
       // Wait for the response (messages will automatically update)
-      if (messages) {
+      if (messages && messages.length > 0) {
         // Set the dynamic questions based on the response (assuming response has questions)
-        setQuestions(messages[1]?.content?.questions || []); // Adjust according to your message structure
+        setQuestions(messages[1]?.content?.questions || []);
         setCode(messages[1]?.content?.code || 'No code generated');
       }
     } catch (error: unknown) {
@@ -63,8 +63,8 @@ export default function DeSaaSPage() {
   // Generate code based on answers (trigger another chat session)
   const generateCode = async () => {
     try {
-      // Use `handleSubmit` to submit the answers to backend
-      await handleSubmit({ role: 'user', content: answers.join(', ') }); // Send answers as a message
+      // Use sendMessage to submit the answers to backend
+      await sendMessage({ role: 'user', content: answers.join(', ') });
 
       if (messages) {
         setCode(messages[1]?.content?.code || 'No code generated');
