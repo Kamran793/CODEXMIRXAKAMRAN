@@ -33,13 +33,9 @@ export default function DeSaaSPage() {
   const startBuilding = async () => {
     setBuilding(true);
 
-    // Prepare the request data with the user input (prompt)
     try {
-      // Send the message (the prompt) via `useChat` and pass the input
-      handleSubmit({
-        role: 'user',
-        content: input, // Passing the user input as the content of the message
-      });
+      // Send the message (the prompt) via `handleSubmit` from `useChat` hook
+      handleSubmit(); // handleSubmit automatically sends the input message
 
       // Wait for the response (messages will automatically update)
       if (messages) {
@@ -69,10 +65,7 @@ export default function DeSaaSPage() {
   const generateCode = async () => {
     try {
       // Send the answers to backend (use `useChat` to send the answers and get the code)
-      handleSubmit({
-        role: 'user',
-        content: answers.join(', '), // Send answers as a message
-      });
+      handleSubmit(); // handleSubmit automatically sends the answers
 
       if (messages) {
         setCode(messages[1]?.content?.code || 'No code generated');
