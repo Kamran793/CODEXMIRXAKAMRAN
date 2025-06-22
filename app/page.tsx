@@ -1,126 +1,78 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useChat } from 'ai/react' // Import the useChat hook for managing chat messages
-import { saveAs } from 'file-saver' // For downloading zip files
-import JSZip from 'jszip' // Library to create zip files
+import { useState, useEffect } from 'react';
+import { useChat } from 'ai/react'; // Importing useChat hook to handle prompts
+import { saveAs } from 'file-saver'; // For downloading zip files
+import JSZip from 'jszip'; // Library to create zip files
 
 export default function CodeGenerationPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat() // Using the useChat hook
-  const [displayedText, setDisplayedText] = useState('')
-  const [typingIndex, setTypingIndex] = useState(0)
-  const [theme, setTheme] = useState('light') // Light theme by default
-  const [screenshot, setScreenshot] = useState<File | null>(null)
-  const [prompt, setPrompt] = useState('')
-  const [questions, setQuestions] = useState<string[]>([])
-  const [answers, setAnswers] = useState<string[]>([])
-  const [questionsAnswered, setQuestionsAnswered] = useState<boolean>(false)
-  const [isProcessing, setIsProcessing] = useState<boolean>(false)
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
+  const [displayedText, setDisplayedText] = useState('');
+  const [typingIndex, setTypingIndex] = useState(0);
+  const [theme, setTheme] = useState('light'); // Light theme by default
+  const [screenshot, setScreenshot] = useState<File | null>(null);
+  const [prompt, setPrompt] = useState('');
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [answers, setAnswers] = useState<string[]>([]);
+  const [questionsAnswered, setQuestionsAnswered] = useState<boolean>(false);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  // Get the latest assistant message
-  const latestAIMessage = messages
-    .filter((m) => m.role === 'assistant')
-    .slice(-1)[0]
-
-  // Typing animation for assistant's message
-  useEffect(() => {
-    if (!latestAIMessage) return
-
-    let content = latestAIMessage.content
-    try {
-      const parsed = JSON.parse(latestAIMessage.content)
-      if (parsed && parsed.content) content = parsed.content
-    } catch {}
-
-    setDisplayedText('')
-    setTypingIndex(0)
-
-    let i = 0
-    const interval = setInterval(() => {
-      setDisplayedText(content.slice(0, i))
-      i++
-      setTypingIndex(i)
-      if (i > content.length) clearInterval(interval)
-    }, 20)
-
-    return () => clearInterval(interval)
-  }, [latestAIMessage?.id])
-
-  // Toggle theme between light and dark
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'))
-  }
-
-  // Handle screenshot upload
+  // Handle the screenshot upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files ? e.target.files[0] : null
-    if (file) setScreenshot(file)
-  }
+    const file = e.target.files ? e.target.files[0] : null;
+    if (file) setScreenshot(file);
+  };
 
   // Update the prompt
   const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setPrompt(e.target.value)
-  }
+    setPrompt(e.target.value);
+  };
 
-  // Call the backend API to process the prompt and screenshot
+  // Handle sending the prompt through the useChat hook
   const handleStartBuilding = async () => {
-    setIsProcessing(true)
+    setIsProcessing(true);
     
-    try {
-      const formData = new FormData()
-      formData.append('prompt', prompt)
-      if (screenshot) formData.append('screenshot', screenshot)
+    // Using the useChat hook to send the prompt and get a response from the assistant
+    await handleSubmit(); // This sends the prompt and processes the response
 
-      const response = await fetch('https://mirxakamran893-LOGIQCURVECHATIQBOT.hf.space/chat', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch questions from backend')
-      }
-
-      const data = await response.json()
-
+    const latestAssistantMessage = messages.find(m => m.role === 'assistant');
+    if (latestAssistantMessage) {
+      // Assume the response from the assistant contains questions
+      const data = JSON.parse(latestAssistantMessage.content);
       if (data?.questions) {
-        setQuestions(data.questions)
-      } else {
-        console.error('Unexpected response format:', data)
+        setQuestions(data.questions); // Set the questions to display
       }
-
-      setIsProcessing(false)
-    } catch (error) {
-      console.error('Error during API request:', error)
-      setIsProcessing(false)
     }
-  }
+
+    setIsProcessing(false);
+  };
 
   // Handle question answers
   const handleAnswerChange = (index: number, answer: string) => {
-    const updatedAnswers = [...answers]
-    updatedAnswers[index] = answer
-    setAnswers(updatedAnswers)
-  }
+    const updatedAnswers = [...answers];
+    updatedAnswers[index] = answer;
+    setAnswers(updatedAnswers);
+  };
 
   // Generate code after questions have been answered
   const generateCode = async () => {
-    if (!answers.length) return
+    if (!answers.length) return;
 
-    const zip = new JSZip()
-    const code = `Generated code based on answers: \n${answers.join('\n')}`
+    const zip = new JSZip();
+    const code = `Generated code based on answers: \n${answers.join('\n')}`;
 
     // Add the generated code to the zip file
-    zip.file('generated_code.txt', code)
+    zip.file('generated_code.txt', code);
 
     // If screenshot is uploaded, add it to the zip file
     if (screenshot) {
-      zip.file('screenshot.png', screenshot)
+      zip.file('screenshot.png', screenshot);
     }
 
     // Generate the zip and prompt for download
-    const zipBlob = await zip.generateAsync({ type: 'blob' })
-    saveAs(zipBlob, 'generated_code.zip')
-  }
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    saveAs(zipBlob, 'generated_code.zip');
+  };
 
   return (
     <div
@@ -218,5 +170,5 @@ export default function CodeGenerationPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
