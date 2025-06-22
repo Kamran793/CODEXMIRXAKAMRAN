@@ -32,25 +32,22 @@ export default function DeSaaSPage() {
   const startBuilding = async () => {
     setBuilding(true);
 
-    // Send prompt and image to backend to get questions
-    try {
-      const formData = new FormData();
-      if (image) formData.append('image', image);
-      formData.append('messages', JSON.stringify([{ role: 'user', content: input }]));
+    // Prepare the request data
+    const formData = new FormData();
+    if (image) formData.append('image', image);
+    formData.append('messages', JSON.stringify([{ role: 'user', content: input }]));
 
-      const response = await fetch('/api/chat/route.ts', {
-        method: 'POST',
-        body: formData,
-      });
+    // Send request to your backend to interact with Hugging Face API
+    const response = await fetch('/api/chat/route.ts', {
+      method: 'POST',
+      body: formData,  // Send FormData to backend
+    });
 
-      if (response.ok) {
-        const data = await response.json();
-        setQuestions(data.questions || []);
-      } else {
-        console.error('Failed to fetch questions');
-      }
-    } catch (error) {
-      console.error('Error:', error);
+    if (response.ok) {
+      const data = await response.json();
+      setQuestions(data.questions || []);
+    } else {
+      console.error('Failed to fetch questions');
     }
   };
 
