@@ -11,7 +11,7 @@ export default function DeSaaSPage() {
   const [answers, setAnswers] = useState<string[]>([]);
   const [image, setImage] = useState<File | null>(null);
 
-  // Toggle theme
+  // Handle theme toggle
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
   };
