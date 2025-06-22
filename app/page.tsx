@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 import { useChat } from 'ai/react'; // Importing useChat hook to handle prompts
 import { saveAs } from 'file-saver'; // For downloading zip files
 import JSZip from 'jszip'; // Library to create zip files
@@ -28,13 +28,13 @@ export default function CodeGenerationPage() {
     setPrompt(e.target.value);
   };
 
-  // Handle sending the prompt through the useChat hook inside a form submission
-  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  // Handle sending the prompt through the useChat hook
+  const handleStartBuilding = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // Prevent the form from submitting the default way
     setIsProcessing(true);
     
-    // Call handleSubmit to process the prompt and get the assistant's response
-    await handleSubmit(); // This triggers the useChat logic
+    // Pass the prompt to handleSubmit to send it through the useChat hook
+    await handleSubmit(); // This sends the prompt and processes the response
 
     const latestAssistantMessage = messages.find(m => m.role === 'assistant');
     if (latestAssistantMessage) {
@@ -129,7 +129,7 @@ export default function CodeGenerationPage() {
         />
 
         {/* Start Building Button */}
-        <form onSubmit={handleFormSubmit}>
+        <form onSubmit={handleStartBuilding}>
           <button
             type="submit"
             className="mt-4 p-2 bg-blue-500 text-white rounded-md"
