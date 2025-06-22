@@ -41,8 +41,7 @@ export default function DeSaaSPage() {
 
       // Wait for the response (messages will automatically update)
       if (messages && messages.length > 0) {
-        // Set the dynamic questions based on the response (assuming response has questions)
-        setQuestions(messages[1]?.content?.questions || []);
+        setQuestions(messages[1]?.content?.questions || []);  // Set dynamic questions
         setCode(messages[1]?.content?.code || 'No code generated');
       }
     } catch (error: unknown) {
@@ -69,12 +68,9 @@ export default function DeSaaSPage() {
 
     try {
       // Instead of using `handleSubmit` to send answers, we directly use the `messages` array
-      // Here, we assume the `answers` are part of the next question and will be handled
-      // The responses should be updated once the answers are provided
       setCode("Generating code...");
 
       // Here, we use the messages array or backend API as required to generate code from answers
-      // You can replace this with backend API call that processes the answers and generates code
       setCode("Generated code: Sample code based on the answers.");  // Placeholder
 
     } catch (error: unknown) {
