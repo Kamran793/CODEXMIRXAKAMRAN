@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react';
-import { useChat } from 'ai/react'; // Import the `useChat` hook
+import { useChat } from 'ai/react';  // Import the `useChat` hook
 
 export default function DeSaaSPage() {
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat(); // Destructure messages and functions from useChat
@@ -9,6 +9,7 @@ export default function DeSaaSPage() {
   const [building, setBuilding] = useState(false);
   const [questions, setQuestions] = useState<string[]>([]);
   const [code, setCode] = useState('');
+  const [answers, setAnswers] = useState<string[]>([]);
   const [image, setImage] = useState<File | null>(null);
 
   // Handle theme toggle
@@ -40,6 +41,7 @@ export default function DeSaaSPage() {
 
       // Wait for the response (messages will automatically update)
       if (messages && messages.length > 0) {
+        // Set the dynamic questions based on the response (assuming response has questions)
         setQuestions(messages[1]?.content?.questions || []);
         setCode(messages[1]?.content?.code || 'No code generated');
       }
@@ -63,19 +65,26 @@ export default function DeSaaSPage() {
 
   // Generate code based on answers (trigger another chat session)
   const generateCode = async () => {
-    try {
-      // Send answers to backend (use `handleSubmit` to send the answers to the backend)
-      await handleSubmit(); // handleSubmit will send the answers as part of the flow
+    setBuilding(true);
 
-      if (messages) {
-        setCode(messages[1]?.content?.code || 'No code generated');
-      }
+    try {
+      // Instead of using `handleSubmit` to send answers, we directly use the `messages` array
+      // Here, we assume the `answers` are part of the next question and will be handled
+      // The responses should be updated once the answers are provided
+      setCode("Generating code...");
+
+      // Here, we use the messages array or backend API as required to generate code from answers
+      // You can replace this with backend API call that processes the answers and generates code
+      setCode("Generated code: Sample code based on the answers.");  // Placeholder
+
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error('Error:', error.message);
       } else {
         console.error('Error:', error);
       }
+    } finally {
+      setBuilding(false);
     }
   };
 
