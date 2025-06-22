@@ -1,13 +1,14 @@
 'use client'
 
+import { useChat } from 'ai/react';
 import { useState } from 'react';
 
 export default function DeSaaSPage() {
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [building, setBuilding] = useState(false);
   const [questions, setQuestions] = useState<string[]>([]);
   const [code, setCode] = useState('');
-  const [input, setInput] = useState('');
   const [answers, setAnswers] = useState<string[]>([]);
   const [image, setImage] = useState<File | null>(null);
 
@@ -18,7 +19,7 @@ export default function DeSaaSPage() {
 
   // Handle input changes for prompt
   const handleInputChangeWithPrompt = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
+    handleInputChange(e); // use the handleInputChange provided by `useChat` hook
   };
 
   // Handle file upload
@@ -28,34 +29,29 @@ export default function DeSaaSPage() {
     }
   };
 
-  // Function to start building code (makes API call to /api/chat)
+  // Function to start building code (trigger chat with `useChat` hook)
   const startBuilding = async () => {
     setBuilding(true);
 
-    // Prepare the request data
-    const formData = new FormData();
-    if (image) formData.append('image', image);
-    formData.append('messages', JSON.stringify([{ role: 'user', content: input }])); // Add user input (prompt)
-
+    // Prepare the request data with the user input (prompt)
     try {
-      const response = await fetch('/api/chat', {  // Correct API endpoint
-        method: 'POST',
-        body: formData,  // Send FormData to backend
-      });
+      // Send the message (the prompt) via `useChat`
+      handleSubmit(); // Submit the message via the `handleSubmit` function from `useChat`
 
-      if (response.ok) {
-        const data = await response.json();
-        setQuestions(data.questions || []);  // Get dynamic questions returned from Hugging Face
-      } else {
-        console.error('Failed to fetch questions', await response.text());
+      // Wait for the response (messages will automatically update)
+      if (messages) {
+        // Set the dynamic questions based on the response (assuming response has questions)
+        setQuestions(messages[1]?.content?.questions || []); // Adjust according to your message structure
+        setCode(messages[1]?.content?.code || 'No code generated');
       }
     } catch (error: unknown) {
-      // Type the error as an instance of Error to access .message
       if (error instanceof Error) {
         console.error('Request failed:', error.message);  // Log error for debugging
       } else {
         console.error('Request failed with unknown error:', error);
       }
+    } finally {
+      setBuilding(false);
     }
   };
 
@@ -66,23 +62,16 @@ export default function DeSaaSPage() {
     setAnswers(updatedAnswers);
   };
 
-  // Generate code based on answers
+  // Generate code based on answers (trigger another chat session)
   const generateCode = async () => {
     try {
-      const response = await fetch('/api/chat', {  // Correct endpoint to interact with route.ts
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers }),  // Send answers to backend
-      });
+      // Send the answers to backend (use `useChat` to send the answers and get the code)
+      handleSubmit(); // Submit the answers via the `useChat` hook
 
-      if (response.ok) {
-        const data = await response.json();
-        setCode(data.code || 'No code generated');
-      } else {
-        console.error('Failed to generate code');
+      if (messages) {
+        setCode(messages[1]?.content?.code || 'No code generated');
       }
     } catch (error: unknown) {
-      // Type the error as an instance of Error to access .message
       if (error instanceof Error) {
         console.error('Error:', error.message);
       } else {
