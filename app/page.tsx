@@ -1,15 +1,14 @@
 'use client'
 
-import { useState } from 'react';
-import { useChat } from 'ai/react';
+import { useState, useEffect } from 'react';
+import { useChat } from 'ai/react';  // Hook to communicate with the backend API
 
 export default function DeSaaSPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();  // Destructure messages and functions from useChat
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [building, setBuilding] = useState(false);
   const [questions, setQuestions] = useState<string[]>([]);
   const [code, setCode] = useState('');
-  const [answers, setAnswers] = useState<string[]>([]);
   const [image, setImage] = useState<File | null>(null);
 
   // Handle theme toggle
@@ -32,9 +31,9 @@ export default function DeSaaSPage() {
   // Function to start building code (trigger chat with `useChat` hook)
   const startBuilding = async () => {
     setBuilding(true);
-
+    
     try {
-      // Send the message (the prompt) via `handleSubmit` from `useChat` hook
+      // Send the prompt (the user input) via `handleSubmit` from `useChat` hook
       await handleSubmit({ role: 'user', content: input }); // Pass the user input as the content
 
       // Wait for the response (messages will automatically update)
@@ -64,7 +63,7 @@ export default function DeSaaSPage() {
   // Generate code based on answers (trigger another chat session)
   const generateCode = async () => {
     try {
-      // Send the answers to backend (use `useChat` to send the answers and get the code)
+      // Use `handleSubmit` to submit the answers to backend
       await handleSubmit({ role: 'user', content: answers.join(', ') }); // Send answers as a message
 
       if (messages) {
@@ -110,91 +109,85 @@ export default function DeSaaSPage() {
       <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
         <div className="space-y-6">
           {/* UI description and screenshot upload */}
-          {!building ? (
-            <>
-              <div>
-                <label htmlFor="prompt" className="block text-lg font-medium">Write a Prompt</label>
+          <div>
+            <label htmlFor="prompt" className="block text-lg font-medium">Write a Prompt</label>
+            <input
+              id="prompt"
+              type="text"
+              placeholder="Describe the UI screen you want to create..."
+              className="mt-2 p-2 w-full rounded-md border border-gray-300"
+              value={input}
+              onChange={handleInputChangeWithPrompt}
+            />
+          </div>
+
+          <div className="mt-4">
+            <label htmlFor="image-upload" className="block text-lg font-medium">Upload UI Screenshot</label>
+            <input
+              type="file"
+              id="image-upload"
+              accept="image/*"
+              className="mt-2"
+              onChange={handleFileChange}
+            />
+          </div>
+
+          <div className="mt-4">
+            <button
+              onClick={startBuilding}
+              className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+            >
+              {building ? 'Building...' : 'Start Building'}
+            </button>
+          </div>
+
+          {/* Display Dynamic Questions for Building */}
+          <div className="space-y-4 mt-4">
+            {questions.map((question, index) => (
+              <div key={index} className="bg-gray-100 p-4 rounded-md shadow">
+                <label className="block text-lg font-medium">{question}</label>
                 <input
-                  id="prompt"
                   type="text"
-                  placeholder="Describe the UI screen you want to create..."
                   className="mt-2 p-2 w-full rounded-md border border-gray-300"
-                  value={input}
-                  onChange={handleInputChangeWithPrompt}
+                  placeholder="Your answer..."
+                  onChange={(e) => handleAnswerChange(index, e.target.value)}
                 />
               </div>
+            ))}
+          </div>
 
-              <div className="mt-4">
-                <label htmlFor="image-upload" className="block text-lg font-medium">Upload UI Screenshot</label>
-                <input
-                  type="file"
-                  id="image-upload"
-                  accept="image/*"
-                  className="mt-2"
-                  onChange={handleFileChange}
-                />
-              </div>
+          {/* Button to generate code */}
+          <div className="mt-4">
+            <button
+              onClick={generateCode}
+              className="w-full py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+            >
+              Generate Code
+            </button>
+          </div>
 
-              <div className="mt-4">
-                <button
-                  onClick={startBuilding}
-                  className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-                >
-                  Start Building
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Display Dynamic Questions for Building */}
-              <div className="space-y-4">
-                {questions.map((question, index) => (
-                  <div key={index} className="bg-gray-100 p-4 rounded-md shadow">
-                    <label className="block text-lg font-medium">{question}</label>
-                    <input
-                      type="text"
-                      className="mt-2 p-2 w-full rounded-md border border-gray-300"
-                      placeholder="Your answer..."
-                      onChange={(e) => handleAnswerChange(index, e.target.value)}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              {/* Button to generate code */}
-              <div className="mt-4">
-                <button
-                  onClick={generateCode}
-                  className="w-full py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
-                >
-                  Generate Code
-                </button>
-              </div>
-
-              {/* Display Generated Code */}
-              {code && (
-                <div className="mt-4">
-                  <textarea
-                    readOnly
-                    className="w-full p-4 bg-gray-800 text-white rounded-md border border-gray-600"
-                    value={code}
-                    rows={10}
-                  />
-                  <button
-                    onClick={() => {
-                      const blob = new Blob([code], { type: 'text/plain' });
-                      const link = document.createElement('a');
-                      link.href = URL.createObjectURL(blob);
-                      link.download = 'generated_code.txt';
-                      link.click();
-                    }}
-                    className="mt-4 w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-                  >
-                    Download Code
-                  </button>
-                </div>
-              )}
-            </>
+          {/* Display Generated Code */}
+          {code && (
+            <div className="mt-4">
+              <textarea
+                readOnly
+                className="w-full p-4 bg-gray-800 text-white rounded-md border border-gray-600"
+                value={code}
+                rows={10}
+              />
+              <button
+                onClick={() => {
+                  const blob = new Blob([code], { type: 'text/plain' });
+                  const link = document.createElement('a');
+                  link.href = URL.createObjectURL(blob);
+                  link.download = 'generated_code.txt';
+                  link.click();
+                }}
+                className="mt-4 w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+              >
+                Download Code
+              </button>
+            </div>
           )}
         </div>
       </div>
