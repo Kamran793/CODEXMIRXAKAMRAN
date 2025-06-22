@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react'
 import { useChat } from 'ai/react'; // Importing useChat hook to handle prompts
 import { saveAs } from 'file-saver'; // For downloading zip files
 import JSZip from 'jszip'; // Library to create zip files
 
 export default function CodeGenerationPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat(); // Using useChat hook
   const [displayedText, setDisplayedText] = useState('');
   const [typingIndex, setTypingIndex] = useState(0);
   const [theme, setTheme] = useState('light'); // Light theme by default
@@ -32,8 +32,8 @@ export default function CodeGenerationPage() {
   const handleStartBuilding = async () => {
     setIsProcessing(true);
     
-    // Using the useChat hook to send the prompt and get a response from the assistant
-    await handleSubmit(); // This sends the prompt and processes the response
+    // Pass the prompt to handleSubmit to send it through the useChat hook
+    await handleSubmit(input); // This sends the prompt and processes the response
 
     const latestAssistantMessage = messages.find(m => m.role === 'assistant');
     if (latestAssistantMessage) {
