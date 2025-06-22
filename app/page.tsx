@@ -32,8 +32,8 @@ export default function CodeGenerationPage() {
   const handleStartBuilding = async () => {
     setIsProcessing(true);
     
-    // Pass the prompt to handleSubmit to send it through the useChat hook
-    await handleSubmit(input); // This sends the prompt and processes the response
+    // This sends the prompt and processes the response using handleSubmit from useChat
+    await handleSubmit(); // This triggers the chat logic in useChat
 
     const latestAssistantMessage = messages.find(m => m.role === 'assistant');
     if (latestAssistantMessage) {
