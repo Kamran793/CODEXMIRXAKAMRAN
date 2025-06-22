@@ -22,7 +22,7 @@ export default function CodeGenerationPage() {
   };
 
   // Update the prompt
-  const handlePromptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePromptChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPrompt(e.target.value);
   };
 
@@ -102,7 +102,7 @@ export default function CodeGenerationPage() {
         {/* Large Text Area for the Prompt */}
         <textarea
           value={prompt}
-          onChange={handlePromptChange}
+          onChange={handlePromptChange} // Updated handler
           className="mt-4 p-4 w-full h-40 border rounded-md bg-gray-100"
           placeholder="Describe the UI screen you want to create..."
         />
