@@ -5,11 +5,12 @@ import { useEffect, useState } from 'react'
 
 export default function DeSaaSPage() {
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat()
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [building, setBuilding] = useState(false);
-  const [questions, setQuestions] = useState<string[]>([]);  // Specify the type here
+  const [questions, setQuestions] = useState<string[]>([]);
   const [code, setCode] = useState('');
   const [image, setImage] = useState<File | null>(null);
+  const [answers, setAnswers] = useState<string[]>([]);
 
   // Handle theme toggle
   const toggleTheme = () => {
@@ -28,19 +29,42 @@ export default function DeSaaSPage() {
     }
   };
 
+  // Dynamically generate questions based on the prompt or image
+  const generateQuestions = (inputText: string) => {
+    // Example of question generation based on input
+    if (inputText.toLowerCase().includes('form')) {
+      setQuestions([
+        'Do you want to add form validation?',
+        'Should the form have a submit button?',
+        'What input types do you need for the form? (e.g., text, number, checkbox)',
+      ]);
+    } else if (inputText.toLowerCase().includes('dashboard')) {
+      setQuestions([
+        'Do you want to display charts or graphs on the dashboard?',
+        'Should the dashboard include a sidebar?',
+        'What data will be shown on the dashboard?',
+      ]);
+    } else {
+      setQuestions(['What components do you want in the layout?']);
+    }
+  };
+
   // Function to simulate 'Start Building' button functionality
   const startBuilding = () => {
     setBuilding(true);
+    // Call to generate questions dynamically based on the prompt
+    generateQuestions(input);
+  };
 
-    // Add your logic to ask questions or generate code here
-    // For demo, we're adding a static question and simulated code generation
-    setQuestions([
-      'What framework do you want to use for this project?',
-      'Do you want to add any database integration?',
-      'Should the UI be responsive?',
-    ]);
+  const handleAnswerChange = (index: number, answer: string) => {
+    const updatedAnswers = [...answers];
+    updatedAnswers[index] = answer;
+    setAnswers(updatedAnswers);
+  };
 
-    setCode('Generated code for the project...');
+  // Simulate code generation after answers
+  const generateCode = () => {
+    setCode('Generated code for the project based on your inputs...');
   };
 
   useEffect(() => {
@@ -127,7 +151,7 @@ export default function DeSaaSPage() {
             </>
           ) : (
             <>
-              {/* Display Questions for Building */}
+              {/* Display Dynamic Questions for Building */}
               <div className="space-y-4">
                 {questions.map((question, index) => (
                   <div key={index} className="bg-gray-100 p-4 rounded-md shadow">
@@ -136,32 +160,45 @@ export default function DeSaaSPage() {
                       type="text"
                       className="mt-2 p-2 w-full rounded-md border border-gray-300"
                       placeholder="Your answer..."
+                      onChange={(e) => handleAnswerChange(index, e.target.value)}
                     />
                   </div>
                 ))}
               </div>
 
-              {/* Display Code */}
+              {/* Button to generate code */}
               <div className="mt-4">
-                <textarea
-                  readOnly
-                  className="w-full p-4 bg-gray-800 text-white rounded-md border border-gray-600"
-                  value={code}
-                  rows={10}
-                />
                 <button
-                  onClick={() => {
-                    const blob = new Blob([code], { type: 'text/plain' });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = 'generated_code.txt';
-                    link.click();
-                  }}
-                  className="mt-4 w-full py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+                  onClick={generateCode}
+                  className="w-full py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
                 >
-                  Download Code
+                  Generate Code
                 </button>
               </div>
+
+              {/* Display Generated Code */}
+              {code && (
+                <div className="mt-4">
+                  <textarea
+                    readOnly
+                    className="w-full p-4 bg-gray-800 text-white rounded-md border border-gray-600"
+                    value={code}
+                    rows={10}
+                  />
+                  <button
+                    onClick={() => {
+                      const blob = new Blob([code], { type: 'text/plain' });
+                      const link = document.createElement('a');
+                      link.href = URL.createObjectURL(blob);
+                      link.download = 'generated_code.txt';
+                      link.click();
+                    }}
+                    className="mt-4 w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                  >
+                    Download Code
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
