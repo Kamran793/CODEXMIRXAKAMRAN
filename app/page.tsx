@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useChat } from 'ai/react';
 
 export default function DeSaaSPage() {
@@ -36,7 +36,7 @@ export default function DeSaaSPage() {
     // Prepare the request data with the user input (prompt)
     try {
       // Send the message (the prompt) via `useChat` and pass the input
-      handleSubmit({ role: 'user', content: input }); // Pass input as an argument
+      handleSubmit(); // Pass input as an argument (uses `handleSubmit` directly from `useChat`)
 
       // Wait for the response (messages will automatically update)
       if (messages) {
@@ -66,7 +66,7 @@ export default function DeSaaSPage() {
   const generateCode = async () => {
     try {
       // Send the answers to backend (use `useChat` to send the answers and get the code)
-      handleSubmit({ role: 'user', content: answers.join(', ') }); // Send answers as a message
+      handleSubmit(); // Submit the answers via the `useChat` hook
 
       if (messages) {
         setCode(messages[1]?.content?.code || 'No code generated');
