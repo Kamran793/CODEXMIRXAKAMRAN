@@ -1,7 +1,7 @@
 'use client'
 
 import { useChat } from 'ai/react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 export default function DeSaaSPage() {
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat()
@@ -9,8 +9,8 @@ export default function DeSaaSPage() {
   const [building, setBuilding] = useState(false);
   const [questions, setQuestions] = useState<string[]>([]);
   const [code, setCode] = useState('');
-  const [image, setImage] = useState<File | null>(null);
   const [answers, setAnswers] = useState<string[]>([]);
+  const [image, setImage] = useState<File | null>(null);
 
   // Handle theme toggle
   const toggleTheme = () => {
@@ -29,16 +29,16 @@ export default function DeSaaSPage() {
     }
   };
 
-  // Function to simulate 'Start Building' button functionality and API call
+  // Function to start building code (makes API call to /api/chat/route.ts)
   const startBuilding = async () => {
     setBuilding(true);
 
-    // Make an API call to get dynamic questions based on the prompt
     try {
+      // Send prompt to backend (your Hugging Face API logic)
       const response = await fetch('/api/chat/route.ts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: input }),
+        body: JSON.stringify({ prompt: input, image: image }),
       });
 
       if (response.ok) {
@@ -62,10 +62,11 @@ export default function DeSaaSPage() {
   // Handle code generation based on answers
   const generateCode = async () => {
     try {
+      // Send answers to the backend to generate code
       const response = await fetch('/api/chat/route.ts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers: answers }),
+        body: JSON.stringify({ answers }),
       });
 
       if (response.ok) {
