@@ -29,31 +29,28 @@ export default function DeSaaSPage() {
     }
   };
 
-  // Dynamically generate questions based on the prompt or image
-  const generateQuestions = (inputText: string) => {
-    // Example of question generation based on input
-    if (inputText.toLowerCase().includes('form')) {
-      setQuestions([
-        'Do you want to add form validation?',
-        'Should the form have a submit button?',
-        'What input types do you need for the form? (e.g., text, number, checkbox)',
-      ]);
-    } else if (inputText.toLowerCase().includes('dashboard')) {
-      setQuestions([
-        'Do you want to display charts or graphs on the dashboard?',
-        'Should the dashboard include a sidebar?',
-        'What data will be shown on the dashboard?',
-      ]);
-    } else {
-      setQuestions(['What components do you want in the layout?']);
-    }
-  };
-
-  // Function to simulate 'Start Building' button functionality
-  const startBuilding = () => {
+  // Function to simulate 'Start Building' button functionality and API call
+  const startBuilding = async () => {
     setBuilding(true);
-    // Call to generate questions dynamically based on the prompt
-    generateQuestions(input);
+
+    // Make an API call to get dynamic questions based on the prompt
+    try {
+      const response = await fetch('/api/chat/route.ts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: input }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Set dynamic questions based on the API response
+        setQuestions(data.questions || []);
+      } else {
+        console.error('Failed to fetch questions');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   const handleAnswerChange = (index: number, answer: string) => {
@@ -62,27 +59,25 @@ export default function DeSaaSPage() {
     setAnswers(updatedAnswers);
   };
 
-  // Simulate code generation after answers
-  const generateCode = () => {
-    setCode('Generated code for the project based on your inputs...');
+  // Handle code generation based on answers
+  const generateCode = async () => {
+    try {
+      const response = await fetch('/api/chat/route.ts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers: answers }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCode(data.code || 'No code generated');
+      } else {
+        console.error('Failed to generate code');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
-
-  useEffect(() => {
-    if (!messages.length) return;
-
-    const latestAIMessage = messages.filter((m) => m.role === 'assistant').slice(-1)[0];
-    let content = latestAIMessage?.content || '';
-
-    // Typing animation and message display
-    let i = 0;
-    const interval = setInterval(() => {
-      setCode((prevCode) => prevCode + content[i]);
-      i++;
-      if (i > content.length) clearInterval(interval);
-    }, 20);
-
-    return () => clearInterval(interval);
-  }, [messages]);
 
   return (
     <div className={`flex flex-col h-screen w-full max-w-screen overflow-hidden ${theme === 'dark' ? 'bg-gradient-to-b from-gray-800 to-gray-900 text-white' : 'bg-gradient-to-b from-gray-200 to-gray-300 text-black'}`}>
