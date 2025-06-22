@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState } from 'react';
 
 export default function DeSaaSPage() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -11,12 +11,12 @@ export default function DeSaaSPage() {
   const [answers, setAnswers] = useState<string[]>([]);
   const [image, setImage] = useState<File | null>(null);
 
-  // Handle theme toggle
+  // Toggle theme
   const toggleTheme = () => {
     setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
   };
 
-  // Handle input changes for description and prompt
+  // Handle input changes for prompt
   const handleInputChangeWithPrompt = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
   };
@@ -35,35 +35,36 @@ export default function DeSaaSPage() {
     // Prepare the request data
     const formData = new FormData();
     if (image) formData.append('image', image);
-    formData.append('messages', JSON.stringify([{ role: 'user', content: input }]));
+    formData.append('messages', JSON.stringify([{ role: 'user', content: input }])); // Add user input (prompt)
 
-    // Send request to your backend API at /api/chat
-    const response = await fetch('/api/chat', {
+    // Send request to /api/chat, which will call `app/api/chat/route.ts` internally by Next.js
+    const response = await fetch('/api/chat', {  // Correct API endpoint (without .ts)
       method: 'POST',
       body: formData,  // Send FormData to backend
     });
 
     if (response.ok) {
       const data = await response.json();
-      setQuestions(data.questions || []);
+      setQuestions(data.questions || []);  // Get dynamic questions returned from Hugging Face
     } else {
       console.error('Failed to fetch questions');
     }
   };
 
+  // Handle answer change for questions
   const handleAnswerChange = (index: number, answer: string) => {
     const updatedAnswers = [...answers];
     updatedAnswers[index] = answer;
     setAnswers(updatedAnswers);
   };
 
-  // Handle code generation based on answers
+  // Generate code based on answers
   const generateCode = async () => {
     try {
-      const response = await fetch('/api/chat', {  // Use correct endpoint here
+      const response = await fetch('/api/chat', {  // Correct endpoint to interact with route.ts
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers }),
+        body: JSON.stringify({ answers }),  // Send answers to backend
       });
 
       if (response.ok) {
