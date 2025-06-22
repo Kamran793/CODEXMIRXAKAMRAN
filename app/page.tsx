@@ -7,7 +7,7 @@ export default function DeSaaSPage() {
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat()
   const [theme, setTheme] = useState('dark');
   const [building, setBuilding] = useState(false);
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState<string[]>([]);  // Specify the type here
   const [code, setCode] = useState('');
   const [image, setImage] = useState<File | null>(null);
 
